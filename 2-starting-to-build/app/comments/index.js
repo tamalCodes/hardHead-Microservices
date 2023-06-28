@@ -1,8 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const { randomBytes } = require('crypto');
+const CORS = require('cors');
 
 const app = express();
+app.use(CORS());
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
@@ -11,22 +13,28 @@ app.get('/', (req, res) => {
 
 const commentsByPostId = {};
 
+app.get('/allcomments', (req, res) => {
+    res.send(commentsByPostId);
+});
+
 app.get('/posts/:id/comments', (req, res) => {
-    res.send(posts);
+    res.send(commentsByPostId[req.params.id] || []);
 });
 
 // Route to create a post
 app.post('/posts/:id/comments', (req, res) => {
     const id = randomBytes(4).toString('hex');
-    const { title } = req.body;
-    posts[id] = {
-        id, title
-    };
+    const { content } = req.body;
 
-    res.status(201).send(posts[id]);
+    const comments = commentsByPostId[req.params.id] || [];
+    comments.push({ id, content });
+
+    commentsByPostId[req.params.id] = comments;
+
+    res.status(201).send(comments);
 });
 
 
 
 
-app.listen(8000, () => console.log('Listening on port 8000'));
+app.listen(8000, () => console.log('COMMENTS on port 8000'));
